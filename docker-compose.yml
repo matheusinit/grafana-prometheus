@@ -1,0 +1,46 @@
+services:
+  prometheus:
+    image: prom/prometheus:v2.36.2
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_storage:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    ports:
+      - 9090:9090
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter
+    network_mode: host
+    environment:
+      DATA_SOURCE_NAME: postgresql://prometheus_monitor:password@localhost:5432/postgres?sslmode=disable
+      # DATA_SOURCE_URI: localhost:5432/postgres?sslmode=disable
+      # DATA_SOURCE_USER: prometheus_monitor
+      # DATA_SOURCE_PASS: password
+    # ports:
+      # - 9187:9187
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    privileged: true
+    ports:
+    - 8080:8080
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    - /dev/disk/:/dev/disk:ro
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_storage:/var/lib/grafana
+
+volumes:
+    prometheus_storage: {}
+    grafana_storage: {}
