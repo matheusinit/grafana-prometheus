@@ -11,27 +11,30 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     ports:
       - 9090:9090
+    restart: always
+
   postgres-exporter:
     image: quay.io/prometheuscommunity/postgres-exporter
-    network_mode: host
     environment:
-      DATA_SOURCE_NAME: postgresql://prometheus_monitor:password@localhost:5432/postgres?sslmode=disable
-      # DATA_SOURCE_URI: localhost:5432/postgres?sslmode=disable
-      # DATA_SOURCE_USER: prometheus_monitor
-      # DATA_SOURCE_PASS: password
-    # ports:
-      # - 9187:9187
+       - DATA_SOURCE_NAME=postgresql://postgres:postgres@postgres:5432/postgres?sslmode=disable
+    ports:
+      - 9187:9187
+    networks:
+      - database_network
+
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.0
     privileged: true
     ports:
-    - 8080:8080
+      - 8080:8080
     volumes:
-    - /:/rootfs:ro
-    - /var/run:/var/run:rw
-    - /sys:/sys:ro
-    - /var/lib/docker/:/var/lib/docker:ro
-    - /dev/disk/:/dev/disk:ro
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    restart: always
+
   grafana:
     image: grafana/grafana
     depends_on:
@@ -40,7 +43,12 @@ services:
       - 3000:3000
     volumes:
       - grafana_storage:/var/lib/grafana
+    restart: always
 
 volumes:
     prometheus_storage: {}
     grafana_storage: {}
+
+networks:
+  database_network:
+    external: true
