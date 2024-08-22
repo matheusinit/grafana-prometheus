@@ -43,6 +43,9 @@ services:
       - 3000:3000
     volumes:
       - grafana_storage:/var/lib/grafana
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+      - ./grafana/provisioning:/etc/grafana/provisioning
+
     restart: always
 
 volumes:
